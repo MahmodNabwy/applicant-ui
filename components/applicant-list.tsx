@@ -1,16 +1,17 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useApplicantStore } from "@/store/applicant-store"
 import { ApplicantCard } from "./applicant-card"
 import { ApplicantForm } from "./applicant-form"
+import { Pagination } from "./pagination"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Plus, Search } from "lucide-react"
 
 export function ApplicantList() {
-  const { applicants } = useApplicantStore()
+  const { applicants, currentPage, itemsPerPage, setCurrentPage, setItemsPerPage } = useApplicantStore()
   const [showForm, setShowForm] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [filterStatus, setFilterStatus] = useState<"all" | "hired" | "pending">("all")
@@ -29,6 +30,15 @@ export function ApplicantList() {
 
     return matchesSearch && matchesFilter
   })
+
+  const totalPages = Math.ceil(filteredApplicants.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const paginatedApplicants = filteredApplicants.slice(startIndex, endIndex)
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm, filterStatus, setCurrentPage])
 
   if (showForm) {
     return (
@@ -81,16 +91,27 @@ export function ApplicantList() {
       </div>
 
       {/* Applicant Grid */}
-      {filteredApplicants.length === 0 ? (
+      {paginatedApplicants.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-muted-foreground">No applicants found matching your criteria.</p>
         </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {filteredApplicants.map((applicant) => (
+          {paginatedApplicants.map((applicant) => (
             <ApplicantCard key={applicant.id} applicant={applicant} />
           ))}
         </div>
+      )}
+
+      {filteredApplicants.length > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          itemsPerPage={itemsPerPage}
+          totalItems={filteredApplicants.length}
+          onPageChange={setCurrentPage}
+          onItemsPerPageChange={setItemsPerPage}
+        />
       )}
     </div>
   )

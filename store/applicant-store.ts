@@ -12,10 +12,14 @@ export interface Applicant {
 
 interface ApplicantStore {
   applicants: Applicant[]
+  currentPage: number
+  itemsPerPage: number
   addApplicant: (applicant: Omit<Applicant, "id">) => void
   updateApplicant: (id: string, applicant: Partial<Applicant>) => void
   deleteApplicant: (id: string) => void
   toggleHired: (id: string) => void
+  setCurrentPage: (page: number) => void
+  setItemsPerPage: (items: number) => void
 }
 
 export const useApplicantStore = create<ApplicantStore>((set) => ({
@@ -47,7 +51,72 @@ export const useApplicantStore = create<ApplicantStore>((set) => ({
       age: 25,
       hired: false,
     },
+    {
+      id: "4",
+      name: "Maria",
+      familyName: "Garcia",
+      country: "Spain",
+      email: "maria.garcia@email.com",
+      age: 29,
+      hired: true,
+    },
+    {
+      id: "5",
+      name: "Chen",
+      familyName: "Wei",
+      country: "China",
+      email: "chen.wei@email.com",
+      age: 31,
+      hired: false,
+    },
+    {
+      id: "6",
+      name: "Pierre",
+      familyName: "Dubois",
+      country: "France",
+      email: "pierre.dubois@email.com",
+      age: 27,
+      hired: true,
+    },
+    {
+      id: "7",
+      name: "Yuki",
+      familyName: "Tanaka",
+      country: "Japan",
+      email: "yuki.tanaka@email.com",
+      age: 26,
+      hired: false,
+    },
+    {
+      id: "8",
+      name: "Lars",
+      familyName: "Andersen",
+      country: "Norway",
+      email: "lars.andersen@email.com",
+      age: 33,
+      hired: true,
+    },
+    {
+      id: "9",
+      name: "Priya",
+      familyName: "Sharma",
+      country: "India",
+      email: "priya.sharma@email.com",
+      age: 24,
+      hired: false,
+    },
+    {
+      id: "10",
+      name: "Carlos",
+      familyName: "Silva",
+      country: "Brazil",
+      email: "carlos.silva@email.com",
+      age: 30,
+      hired: true,
+    },
   ],
+  currentPage: 1,
+  itemsPerPage: 6,
 
   addApplicant: (applicant) =>
     set((state) => ({
@@ -71,5 +140,16 @@ export const useApplicantStore = create<ApplicantStore>((set) => ({
       applicants: state.applicants.map((applicant) =>
         applicant.id === id ? { ...applicant, hired: !applicant.hired } : applicant,
       ),
+    })),
+
+  setCurrentPage: (page) =>
+    set(() => ({
+      currentPage: page,
+    })),
+
+  setItemsPerPage: (items) =>
+    set(() => ({
+      itemsPerPage: items,
+      currentPage: 1, // Reset to first page when changing items per page
     })),
 }))
