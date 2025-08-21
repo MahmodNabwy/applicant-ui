@@ -26,7 +26,7 @@ export function ApplicantForm({ applicant, onClose }: ApplicantFormProps) {
     address: applicant?.address || "",
     country: applicant?.country || "",
     email: applicant?.email || "",
-    age: applicant?.age || 18,
+    age: applicant?.age || 20,
     hired: applicant?.hired || false,
   });
 
@@ -40,17 +40,27 @@ export function ApplicantForm({ applicant, onClose }: ApplicantFormProps) {
     setFormError("");
     try {
       // Client-side validation with zod (no extra dependency needed)
-      const schema = z.object({
-        name: z.string().min(5, "Name must be at least 5 characters"),
-        familyName: z
-          .string()
-          .min(5, "Family Name must be at least 5 characters"),
-        address: z.string().min(1, "Address is required"),
-        country: z.string().min(1, "Country is required"),
-        email: z.string().email("Invalid email"),
-        age: z.number({ coerce: true }).min(18).max(100),
-        hired: z.boolean(),
-      });
+      const schema = z
+        .object({
+          name: z.string().min(5, "Name must be at least 5 characters"),
+          familyName: z
+            .string()
+            .min(5, "Family Name must be at least 5 characters"),
+          address: z.string().min(1, "Address is required"),
+          country: z.string().min(1, "Country is required"),
+          email: z.string().email("Invalid email"),
+          age: z.number({ coerce: true }),
+          hired: z.boolean(),
+        })
+        .superRefine((data, ctx) => {
+          if (data.age < 20 || data.age > 60) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: `Age' must be between 20 and 60. You entered ${data.age}.`,
+              path: ["age"],
+            });
+          }
+        });
       const parsed = schema.safeParse(formData);
       if (!parsed.success) {
         const fieldKeyMap: Record<string, string> = {
@@ -199,8 +209,8 @@ export function ApplicantForm({ applicant, onClose }: ApplicantFormProps) {
             <Input
               id="age"
               type="number"
-              min="18"
-              max="100"
+              min="20"
+              max="60"
               value={formData.age}
               onChange={(e) =>
                 handleChange("age", Number.parseInt(e.target.value))
@@ -208,6 +218,9 @@ export function ApplicantForm({ applicant, onClose }: ApplicantFormProps) {
               required
               disabled={submitting}
             />
+            {errors.Age && (
+              <p className="text-sm text-red-600 mt-1">{errors.Age[0]}</p>
+            )}
           </div>
 
           <div className="flex items-center space-x-2">

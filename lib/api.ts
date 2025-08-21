@@ -19,7 +19,32 @@ type ApplicantListItemDto = {
   country?: string | null
   hired: boolean
 }
+type PagedResponse<T> = {
+  page: {
+    pageSize: number
+    currentPage: number
+    totalCount: number
+    skip: number
+    totalPages: number
+    startPage: number
+    endPage: number
+  }
+  data: T[]
+}
+type Pagination = {
+  pageSize: number
+  currentPage: number
+  totalCount: number
+  skip: number
+  totalPages: number
+  startPage: number
+  endPage: number
+}
 
+type PagedApplicants = {
+  applicants: Applicant[]
+  page: Pagination
+}
 type ApplicantDto = {
   id: number
   name?: string | null
@@ -87,14 +112,26 @@ export class ApiValidationError extends Error {
   }
 }
 
-export async function fetchApplicants(page?: number, pageSize?: number): Promise<Applicant[]> {
+export async function apiFetchApplicants(
+  page?: number,
+  pageSize?: number
+): Promise<PagedApplicants> {
   const qs = new URLSearchParams()
-  if (page) qs.set('Page', String(page))
-  if (pageSize) qs.set('PageSize', String(pageSize))
-  const res = await fetch(`${API_BASE}/api/Applicants${qs.toString() ? `?${qs}` : ''}`)
-  if (!res.ok) throw new Error('Failed to fetch applicants')
-  const data = (await res.json()) as (ApplicantListItemDto | ApplicantDto)[]
-  return data.map(mapDtoToApplicant)
+  if (page) qs.set("Page", String(page))
+  if (pageSize) qs.set("PageSize", String(pageSize))
+
+  const res = await fetch(`${API_BASE}/api/Applicants${qs.toString() ? `?${qs}` : ""}`)
+  if (!res.ok) throw new Error("Failed to fetch applicants")
+
+  const json = (await res.json()) as {
+    page: Pagination
+    data: ApplicantDto[]
+  }
+
+  return {
+    applicants: json.data.map(mapDtoToApplicant),
+    page: json.page,
+  }
 }
 
 export async function createApplicant(a: Omit<Applicant, 'id'>): Promise<Applicant> {

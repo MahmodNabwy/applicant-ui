@@ -1,6 +1,6 @@
 import { create } from "zustand"
 import {
-  fetchApplicants as apiFetchApplicants,
+  apiFetchApplicants as apiFetchApplicants,
   createApplicant as apiCreateApplicant,
   updateApplicant as apiUpdateApplicant,
   deleteApplicant as apiDeleteApplicant,
@@ -14,6 +14,8 @@ interface ApplicantStore {
   applicants: Applicant[]
   currentPage: number
   itemsPerPage: number
+  totalPages: number
+  totalCount: number
   loadApplicants: () => Promise<void>
   addApplicant: (applicant: Omit<Applicant, "id">) => Promise<void>
   updateApplicant: (id: number, applicant: Partial<Applicant>) => Promise<void>
@@ -27,10 +29,21 @@ export const useApplicantStore = create<ApplicantStore>((set, get) => ({
   applicants: [],
   currentPage: 1,
   itemsPerPage: 6,
+  totalPages: 0,
+  totalCount: 0,
 
   loadApplicants: async () => {
-    const data = await apiFetchApplicants()
-    set({ applicants: data })
+    const { applicants, page } = await apiFetchApplicants(
+      get().currentPage,
+      get().itemsPerPage
+    )
+    set({
+      applicants,
+      currentPage: page.currentPage,
+      itemsPerPage: page.pageSize,
+      totalPages: page.totalPages,
+      totalCount: page.totalCount,
+    })
   },
 
   addApplicant: async (applicant) => {
@@ -42,7 +55,7 @@ export const useApplicantStore = create<ApplicantStore>((set, get) => ({
     await apiUpdateApplicant(id, updatedApplicant)
     set((state) => ({
       applicants: state.applicants.map((applicant) =>
-        applicant.id === id ? { ...applicant, ...updatedApplicant } : applicant,
+        applicant.id === id ? { ...applicant, ...updatedApplicant } : applicant
       ),
     }))
   },
@@ -60,11 +73,13 @@ export const useApplicantStore = create<ApplicantStore>((set, get) => ({
     try {
       await setApplicantHired(id, next)
     } catch {
-      // fallback to full update if specialized endpoint not available
+      // fallback if specialized endpoint not available
       await apiUpdateApplicant(id, { hired: next })
     }
     set((state) => ({
-      applicants: state.applicants.map((a) => (a.id === id ? { ...a, hired: next } : a)),
+      applicants: state.applicants.map((a) =>
+        a.id === id ? { ...a, hired: next } : a
+      ),
     }))
   },
 

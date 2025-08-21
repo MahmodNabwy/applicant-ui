@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useEffect, useRef } from "react";
 import { useApplicantStore } from "@/store/applicant-store";
 import { ApplicantCard } from "./applicant-card";
@@ -16,27 +14,42 @@ import {
 } from "@/components/ui/select";
 import { Plus, Search } from "lucide-react";
 
-export function ApplicantList() {
+export default function ApplicantListPage() {
   const {
     applicants,
     currentPage,
     itemsPerPage,
+    totalPages,
+    totalCount,
     setCurrentPage,
     setItemsPerPage,
     loadApplicants,
   } = useApplicantStore();
+
   const [showForm, setShowForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<"all" | "hired" | "pending">(
     "all"
   );
 
+  // --- Fetch applicants whenever page/size changes ---
+  const didFetchRef = useRef(false);
+  useEffect(() => {
+    if (didFetchRef.current) {
+      void loadApplicants();
+    } else {
+      didFetchRef.current = true;
+      void loadApplicants();
+    }
+  }, [currentPage, itemsPerPage]);
+
+  // --- Local filtering on the already-loaded page ---
   const filteredApplicants = applicants.filter((applicant) => {
     const matchesSearch =
       applicant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       applicant.familyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      applicant.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      applicant.country.toLowerCase().includes(searchTerm.toLowerCase());
+      applicant.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      applicant.country?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesFilter =
       filterStatus === "all" ||
@@ -45,22 +58,6 @@ export function ApplicantList() {
 
     return matchesSearch && matchesFilter;
   });
-
-  const totalPages = Math.ceil(filteredApplicants.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedApplicants = filteredApplicants.slice(startIndex, endIndex);
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, filterStatus, setCurrentPage]);
-
-  const didFetchRef = useRef(false);
-  useEffect(() => {
-    if (didFetchRef.current) return;
-    didFetchRef.current = true;
-    void loadApplicants();
-  }, []);
 
   if (showForm) {
     return (
@@ -77,7 +74,7 @@ export function ApplicantList() {
         <div>
           <h1 className="text-3xl font-bold">Applicant Management</h1>
           <p className="text-muted-foreground">
-            Manage your job applicants ({applicants.length} total)
+            Manage your job applicants ({totalCount} total)
           </p>
         </div>
         <Button onClick={() => setShowForm(true)}>
@@ -117,29 +114,29 @@ export function ApplicantList() {
       {/* Results */}
       <div className="text-sm text-muted-foreground">
         Showing {filteredApplicants.length} of {applicants.length} applicants
+        (page {currentPage}/{totalPages})
       </div>
 
       {/* Applicant Grid */}
-      {paginatedApplicants.length === 0 ? (
+      {filteredApplicants.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-muted-foreground">
-            No applicants found matching your criteria.
-          </p>
+          <p className="text-muted-foreground">No applicants found.</p>
         </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {paginatedApplicants.map((applicant) => (
+          {filteredApplicants.map((applicant) => (
             <ApplicantCard key={applicant.id} applicant={applicant} />
           ))}
         </div>
       )}
 
-      {filteredApplicants.length > 0 && (
+      {/* Pagination */}
+      {totalCount > 0 && (
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
           itemsPerPage={itemsPerPage}
-          totalItems={filteredApplicants.length}
+          totalItems={totalCount}
           onPageChange={setCurrentPage}
           onItemsPerPageChange={setItemsPerPage}
         />

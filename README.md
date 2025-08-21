@@ -1,30 +1,67 @@
-# Applicant
+# Applicant Tracker (Frontend)
 
-*Automatically synced with your [v0.app](https://v0.app) deployments*
+A small React + TypeScript UI to manage job applicants: list, search, filter, paginate, add, edit, delete, and toggle hired status. Connects to a backend API (default `https://localhost:7292`).
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/mahmodashrf79-gmailcoms-projects/v0-applicant)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.app-black?style=for-the-badge)](https://v0.app/chat/projects/Se8nxkV9Zrs)
+## Features
 
-## Overview
+- Applicant list with search and status filter (all, hired, pending)
+- Client-side pagination controls
+- Create and edit applicants
+- Toggle hired status
+- Toast notifications
+- Age validation: Age must be between 20 and 60. You’ll see “Age' must be between 20 and 60. You entered X.” on invalid input
 
-This repository will stay in sync with your deployed chats on [v0.app](https://v0.app).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.app](https://v0.app).
+## Tech Stack
 
-## Deployment
+- React 18, TypeScript, Vite
+- Zustand (state), Zod (validation)
+- Radix UI primitives + small UI components
+- Tailwind CSS (v4) + tailwindcss-animate
+- Sonner (toasts), Lucide (icons)
 
-Your project is live at:
+## Getting Started
 
-**[https://vercel.com/mahmodashrf79-gmailcoms-projects/v0-applicant](https://vercel.com/mahmodashrf79-gmailcoms-projects/v0-applicant)**
+1. Install dependencies
 
-## Build your app
+```bash
+pnpm install
+```
 
-Continue building your app on:
+2. Configure API base URL
 
-**[https://v0.app/chat/projects/Se8nxkV9Zrs](https://v0.app/chat/projects/Se8nxkV9Zrs)**
+- The API base is defined in `lib/api.ts` as `API_BASE`. Default is `https://localhost:7292`.
+- Update it if your backend runs elsewhere.
 
-## How It Works
+3. Run the dev server
 
-1. Create and modify your project using [v0.app](https://v0.app)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+```bash
+pnpm dev
+```
+
+4. Build for production
+
+```bash
+pnpm build
+pnpm preview
+```
+
+## Project Structure
+
+- `src/main.tsx` – app entry
+- `src/App.tsx` – root component
+- `components/` – UI and feature components
+  - `components/applicant-list.tsx` – list, search, filter, pagination
+  - `components/applicant-form.tsx` – create/edit form with validation
+  - `components/ui/*` – minimal UI primitives
+- `store/applicant-store.ts` – Zustand store, API calls wiring
+- `lib/api.ts` – API client and DTO mapping
+- `styles/globals.css` or `app/globals.css` – global styles
+
+## Notes
+
+- In development, React Strict Mode can cause `useEffect` to run twice. We disabled Strict Mode in `src/main.tsx` to avoid duplicate fetches.
+- Ensure your backend has CORS configured to allow the dev server origin.
+
+## License
+
+MIT
