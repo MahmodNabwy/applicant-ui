@@ -1,51 +1,73 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useApplicantStore } from "@/store/applicant-store"
-import { ApplicantCard } from "./applicant-card"
-import { ApplicantForm } from "./applicant-form"
-import { Pagination } from "./pagination"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, Search } from "lucide-react"
+import { useState, useEffect, useRef } from "react";
+import { useApplicantStore } from "@/store/applicant-store";
+import { ApplicantCard } from "./applicant-card";
+import { ApplicantForm } from "./applicant-form";
+import { Pagination } from "./pagination";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Plus, Search } from "lucide-react";
 
 export function ApplicantList() {
-  const { applicants, currentPage, itemsPerPage, setCurrentPage, setItemsPerPage } = useApplicantStore()
-  const [showForm, setShowForm] = useState(false)
-  const [searchTerm, setSearchTerm] = useState("")
-  const [filterStatus, setFilterStatus] = useState<"all" | "hired" | "pending">("all")
+  const {
+    applicants,
+    currentPage,
+    itemsPerPage,
+    setCurrentPage,
+    setItemsPerPage,
+    loadApplicants,
+  } = useApplicantStore();
+  const [showForm, setShowForm] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState<"all" | "hired" | "pending">(
+    "all"
+  );
 
   const filteredApplicants = applicants.filter((applicant) => {
     const matchesSearch =
       applicant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       applicant.familyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       applicant.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      applicant.country.toLowerCase().includes(searchTerm.toLowerCase())
+      applicant.country.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesFilter =
       filterStatus === "all" ||
       (filterStatus === "hired" && applicant.hired) ||
-      (filterStatus === "pending" && !applicant.hired)
+      (filterStatus === "pending" && !applicant.hired);
 
-    return matchesSearch && matchesFilter
-  })
+    return matchesSearch && matchesFilter;
+  });
 
-  const totalPages = Math.ceil(filteredApplicants.length / itemsPerPage)
-  const startIndex = (currentPage - 1) * itemsPerPage
-  const endIndex = startIndex + itemsPerPage
-  const paginatedApplicants = filteredApplicants.slice(startIndex, endIndex)
+  const totalPages = Math.ceil(filteredApplicants.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedApplicants = filteredApplicants.slice(startIndex, endIndex);
 
   useEffect(() => {
-    setCurrentPage(1)
-  }, [searchTerm, filterStatus, setCurrentPage])
+    setCurrentPage(1);
+  }, [searchTerm, filterStatus, setCurrentPage]);
+
+  const didFetchRef = useRef(false);
+  useEffect(() => {
+    if (didFetchRef.current) return;
+    didFetchRef.current = true;
+    void loadApplicants();
+  }, []);
 
   if (showForm) {
     return (
       <div className="max-w-2xl mx-auto">
         <ApplicantForm onClose={() => setShowForm(false)} />
       </div>
-    )
+    );
   }
 
   return (
@@ -54,7 +76,9 @@ export function ApplicantList() {
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Applicant Management</h1>
-          <p className="text-muted-foreground">Manage your job applicants ({applicants.length} total)</p>
+          <p className="text-muted-foreground">
+            Manage your job applicants ({applicants.length} total)
+          </p>
         </div>
         <Button onClick={() => setShowForm(true)}>
           <Plus className="h-4 w-4 mr-2" />
@@ -73,7 +97,12 @@ export function ApplicantList() {
             className="pl-10"
           />
         </div>
-        <Select value={filterStatus} onValueChange={(value: "all" | "hired" | "pending") => setFilterStatus(value)}>
+        <Select
+          value={filterStatus}
+          onValueChange={(value: "all" | "hired" | "pending") =>
+            setFilterStatus(value)
+          }
+        >
           <SelectTrigger className="w-full sm:w-48">
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
@@ -93,7 +122,9 @@ export function ApplicantList() {
       {/* Applicant Grid */}
       {paginatedApplicants.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-muted-foreground">No applicants found matching your criteria.</p>
+          <p className="text-muted-foreground">
+            No applicants found matching your criteria.
+          </p>
         </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -114,5 +145,5 @@ export function ApplicantList() {
         />
       )}
     </div>
-  )
+  );
 }
